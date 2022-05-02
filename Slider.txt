@@ -1,0 +1,19 @@
+  Container(
+    color: Colors.red,
+    child: CarouselSlider.builder(
+      options: CarouselOptions(
+        height: 400,
+        // viewportFraction: 1,
+        // autoPlay: true,
+        // autoPlayInterval: Duration(seconds: 2),
+      ),
+      itemCount: movies.length,
+      itemBuilder: (context, index, realIndex) {
+        final movie = movies[index];
+        return MovieCard(
+          title: movie['title'],
+          image: movie['image'],
+        );
+      },
+    ),
+  ),
