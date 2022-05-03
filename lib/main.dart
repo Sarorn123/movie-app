@@ -81,7 +81,9 @@ class _MyAppState extends State<MyApp> {
                   label: "List",
                 ),
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.info_outline), label: "Info"),
+                  icon: Icon(Icons.info_outline),
+                  label: "Info",
+                ),
               ],
             ),
           ),

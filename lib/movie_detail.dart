@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, unnecessary_const, prefer_const_constructors, deprecated_member_use, non_constant_identifier_names, use_key_in_widget_constructors, prefer_typing_uninitialized_variables
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:r_movie/cast.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -34,6 +35,7 @@ class _MovieDetailState extends State<MovieDetail> {
   bool _isConnect = true;
   late YoutubePlayerController _YTcontroller;
   final _scrollController = ScrollController();
+  String _streaming_link = "";
 
   void checkConnection() async {
     ConnectivityResult connectivityResult =
@@ -72,6 +74,14 @@ class _MovieDetailState extends State<MovieDetail> {
         if (singleMovie['date_uploaded'] == null) {
           singleMovie['date_uploaded'] = "1876-01-01";
         }
+        var hash = singleMovie['torrents'][0]["hash"];
+        var encoded_name = Uri.encodeComponent(singleMovie['title_long']);
+
+        _streaming_link = "magnet:?xt=urn:btih:" +
+            hash +
+            "&dn=" +
+            encoded_name +
+            "&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.openbittorrent.com:80";
         _isLoading = false;
       });
     } else {
@@ -461,76 +471,106 @@ class _MovieDetailState extends State<MovieDetail> {
                                           ),
                                         ],
                                       ),
-                                      Column(
-                                        children: [
-                                          GestureDetector(
-                                            child: Icon(
+                                      GestureDetector(
+                                        onTap: () {
+                                          final data = ClipboardData(
+                                            text: _streaming_link,
+                                          );
+                                          Clipboard.setData(data);
+                                          // Navigator.push(
+                                          //   context,
+                                          //   MaterialPageRoute(
+                                          //     builder: (context) => MoviePlayer(
+                                          //       streamingLink: _streaming_link,
+                                          //     ),
+                                          //   ),
+                                          // );
+                                          _launchURL(
+                                            "https://webtor.io/#/magnet-to-torrent",
+                                          );
+                                        },
+                                        child: Column(
+                                          children: [
+                                            Icon(
+                                              Icons.play_circle,
+                                              color: Colors.white,
+                                            ),
+                                            Text(
+                                              "Play",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: () {
+                                          showModalBottomSheet(
+                                            context: context,
+                                            builder: (contex) {
+                                              return Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.only(
+                                                    topRight:
+                                                        Radius.circular(20),
+                                                    topLeft:
+                                                        Radius.circular(20),
+                                                  ),
+                                                ),
+                                                child: ListView.separated(
+                                                  shrinkWrap: true,
+                                                  itemCount:
+                                                      singleMovie["torrents"]
+                                                          .length,
+                                                  separatorBuilder:
+                                                      (BuildContext context,
+                                                          int index) {
+                                                    return SizedBox(height: 0);
+                                                  },
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    var quality =
+                                                        singleMovie["torrents"]
+                                                            [index];
+                                                    return ListTile(
+                                                      leading: Icon(
+                                                        Icons.download,
+                                                        color: Colors.orange,
+                                                      ),
+                                                      title: Text(
+                                                        quality["quality"] +
+                                                            " 👉 " +
+                                                            quality['size'],
+                                                      ),
+                                                      onTap: () {
+                                                        _launchURL(
+                                                          quality["url"],
+                                                        );
+                                                      },
+                                                    );
+                                                  },
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                        child: Column(
+                                          children: [
+                                            Icon(
                                               Icons.download,
                                               color: Colors.white,
                                             ),
-                                            onTap: () {
-                                              showModalBottomSheet(
-                                                context: context,
-                                                builder: (contex) {
-                                                  return Container(
-                                                    decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.only(
-                                                        topRight:
-                                                            Radius.circular(20),
-                                                        topLeft:
-                                                            Radius.circular(20),
-                                                      ),
-                                                    ),
-                                                    child: ListView.separated(
-                                                      shrinkWrap: true,
-                                                      itemCount: singleMovie[
-                                                              "torrents"]
-                                                          .length,
-                                                      separatorBuilder:
-                                                          (BuildContext context,
-                                                              int index) {
-                                                        return SizedBox(
-                                                            height: 0);
-                                                      },
-                                                      itemBuilder:
-                                                          (context, index) {
-                                                        var quality =
-                                                            singleMovie[
-                                                                    "torrents"]
-                                                                [index];
-                                                        return ListTile(
-                                                          leading: Icon(
-                                                            Icons.download,
-                                                            color:
-                                                                Colors.orange,
-                                                          ),
-                                                          title: Text(
-                                                            quality["quality"] +
-                                                                " 👉 " +
-                                                                quality['size'],
-                                                          ),
-                                                          onTap: () {
-                                                            _launchURL(
-                                                              quality["url"],
-                                                            );
-                                                          },
-                                                        );
-                                                      },
-                                                    ),
-                                                  );
-                                                },
-                                              );
-                                            },
-                                          ),
-                                          Text(
-                                            singleMovie['download_count']
-                                                .toString(),
-                                            style: TextStyle(
-                                              color: Colors.white,
+                                            Text(
+                                              singleMovie['download_count']
+                                                  .toString(),
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -538,6 +578,8 @@ class _MovieDetailState extends State<MovieDetail> {
                                 SizedBox(
                                   height: 20,
                                 ),
+
+                                // -> Suggestions
 
                                 Text(
                                   'Suggestions',
